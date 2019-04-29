@@ -44,122 +44,107 @@ def load_image_into_numpy_array(image):
 cap = cv2.VideoCapture("./media/test.mp4")
 out = None
 
-detection_graph = tf.Graph()
-with detection_graph.as_default():
-    od_graph_def = tf.GraphDef()
-    with tf.gfile.GFile(PATH_TO_CKPT, 'rb') as fid:
-        serialized_graph = fid.read()
-        od_graph_def.ParseFromString(serialized_graph)
-        tf.import_graph_def(od_graph_def, name='')
 
-with detection_graph.as_default():
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
-    with tf.Session(graph=detection_graph, config=config) as sess:
-        frame_num = 1490
-        while frame_num:
-            frame_num -= 1
-            ret, image = cap.read()
-            if ret == 0:
-                break
+frame_num = 1490
+while frame_num:
+    frame_num -= 1
+    ret, image = cap.read()
+    if ret == 0:
+        break
 
-            if out is None:
-                [h, w] = image.shape[:2]
-                out = cv2.VideoWriter("./media/test_out.avi", 0, 25.0, (w, h))
+    if out is None:
+        [h, w] = image.shape[:2]
+        out = cv2.VideoWriter("./media/test_out.avi", 0, 25.0, (w, h))
 
-            image_np = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image_np = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-            # the array based representation of the image will be used later in order to prepare the
-            # result image with boxes and labels on it.
-            # Expand dimensions since the model expects images to have shape:
-            # [1, None, None, 3]
-            image_np_expanded = np.expand_dims(image_np, axis=0)
+    # the array based representation of the image will be used later in order to prepare the
+    # result image with boxes and labels on it.
+    # Expand dimensions since the model expects images to have shape:
+    # [1, None, None, 3]
+    image_np_expanded = np.expand_dims(image_np, axis=0)
 
-            # image_tensor = detection_graph.get_tensor_by_name('image_tensor:0')
-            # # Each box represents a part of the image where a particular object was detected.
-            # boxes = detection_graph.get_tensor_by_name('detection_boxes:0')
-            # # Each score represent how level of confidence for each of the objects.
-            # # Score is shown on the result image, together with the class label.
-            # scores = detection_graph.get_tensor_by_name('detection_scores:0')
-            # classes = detection_graph.get_tensor_by_name('detection_classes:0')
-            # num_detections = detection_graph.get_tensor_by_name('num_detections:0')
+    # image_tensor = detection_graph.get_tensor_by_name('image_tensor:0')
+    # # Each box represents a part of the image where a particular object was detected.
+    # boxes = detection_graph.get_tensor_by_name('detection_boxes:0')
+    # # Each score represent how level of confidence for each of the objects.
+    # # Score is shown on the result image, together with the class label.
+    # scores = detection_graph.get_tensor_by_name('detection_scores:0')
+    # classes = detection_graph.get_tensor_by_name('detection_classes:0')
+    # num_detections = detection_graph.get_tensor_by_name('num_detections:0')
 
-            # export_path = "/tmp/face_detector/0"
-            # print('Exporting trained model to', export_path)
+    # export_path = "/tmp/face_detector/0"
+    # print('Exporting trained model to', export_path)
 
-            # builder = tf.saved_model.builder.SavedModelBuilder(export_path)
-            # # Define input tensor
-            # image_tensor_serving = tf.saved_model.utils.build_tensor_info(image_tensor)
+    # builder = tf.saved_model.builder.SavedModelBuilder(export_path)
+    # # Define input tensor
+    # image_tensor_serving = tf.saved_model.utils.build_tensor_info(image_tensor)
 
-            # # Define output tensor
-            # boxes_serving = tf.saved_model.utils.build_tensor_info(boxes)
-            # scores_serving = tf.saved_model.utils.build_tensor_info(scores)
-            # classes_serving = tf.saved_model.utils.build_tensor_info(classes)
-            # num_detections_serving = tf.saved_model.utils.build_tensor_info(num_detections)
+    # # Define output tensor
+    # boxes_serving = tf.saved_model.utils.build_tensor_info(boxes)
+    # scores_serving = tf.saved_model.utils.build_tensor_info(scores)
+    # classes_serving = tf.saved_model.utils.build_tensor_info(classes)
+    # num_detections_serving = tf.saved_model.utils.build_tensor_info(num_detections)
 
-            # prediction_signature = (
-            #    tf.saved_model.signature_def_utils.build_signature_def(
-            #        inputs={'image_tensor': image_tensor_serving},
-            #        outputs={'boxes': boxes_serving, 'scores': scores_serving, 'classes': classes_serving, 'num_detections': num_detections_serving},
-            #        method_name=tf.saved_model.signature_constants.PREDICT_METHOD_NAME))
+    # prediction_signature = (
+    #    tf.saved_model.signature_def_utils.build_signature_def(
+    #        inputs={'image_tensor': image_tensor_serving},
+    #        outputs={'boxes': boxes_serving, 'scores': scores_serving, 'classes': classes_serving, 'num_detections': num_detections_serving},
+    #        method_name=tf.saved_model.signature_constants.PREDICT_METHOD_NAME))
 
-            # builder.add_meta_graph_and_variables(
-            #     sess, [tf.saved_model.tag_constants.SERVING],
-            #     signature_def_map={
-            #         'predict_output':
-            #             prediction_signature,
-            #     },
-            #     main_op=tf.tables_initializer(),
-            #     strip_default_attrs=True)
+    # builder.add_meta_graph_and_variables(
+    #     sess, [tf.saved_model.tag_constants.SERVING],
+    #     signature_def_map={
+    #         'predict_output':
+    #             prediction_signature,
+    #     },
+    #     main_op=tf.tables_initializer(),
+    #     strip_default_attrs=True)
 
-            # builder.save()
+    # builder.save()
 
-            # Actual detection.
-            start_time = time.time()
-            # (boxes, scores, classes, num_detections) = sess.run(
-            #     [boxes, scores, classes, num_detections],
-            #     feed_dict={image_tensor: image_np_expanded})
+    # Actual detection.
+    start_time = time.time()
 
-            channel = grpc.insecure_channel('0.0.0.0:8500')
-            stub = prediction_service_pb2_grpc.PredictionServiceStub(channel)
-            request = predict_pb2.PredictRequest()
-            request.model_spec.name = 'face_detector'
-            request.model_spec.signature_name = 'predict_output'
-            request.inputs['image_tensor'].CopyFrom(
-                tf.contrib.util.make_tensor_proto(image_np_expanded, shape=list(image_np_expanded.shape)))
+    channel = grpc.insecure_channel('0.0.0.0:8500')
+    stub = prediction_service_pb2_grpc.PredictionServiceStub(channel)
+    request = predict_pb2.PredictRequest()
+    request.model_spec.name = 'face_detector'
+    request.model_spec.signature_name = 'predict_output'
+    request.inputs['image_tensor'].CopyFrom(
+        tf.contrib.util.make_tensor_proto(image_np_expanded, shape=list(image_np_expanded.shape)))
 
-            result = stub.Predict(request, 10.0)  # 5 seconds
+    result = stub.Predict(request, 10.0)  # 5 seconds
 
-            boxes = tensor_util.MakeNdarray(
-                result.outputs['boxes'])
+    boxes = tensor_util.MakeNdarray(
+        result.outputs['boxes'])
 
-            scores = tensor_util.MakeNdarray(
-                result.outputs['scores'])
+    scores = tensor_util.MakeNdarray(
+        result.outputs['scores'])
 
-            classes = tensor_util.MakeNdarray(
-                result.outputs['classes'])
+    classes = tensor_util.MakeNdarray(
+        result.outputs['classes'])
 
-            num_detections = tensor_util.MakeNdarray(
-                result.outputs['num_detections'])
+    num_detections = tensor_util.MakeNdarray(
+        result.outputs['num_detections'])
 
-            elapsed_time = time.time() - start_time
-            print('inference time cost: {}'.format(elapsed_time))
-            break
-            #print(boxes.shape, boxes)
-            # print(scores.shape,scores)
-            # print(classes.shape,classes)
-            # print(num_detections)
-            # Visualization of the results of a detection.
-            vis_util.visualize_boxes_and_labels_on_image_array(
-                #          image_np,
-                image,
-                np.squeeze(boxes),
-                np.squeeze(classes).astype(np.int32),
-                np.squeeze(scores),
-                category_index,
-                use_normalized_coordinates=True,
-                line_thickness=4)
-            out.write(image)
+    elapsed_time = time.time() - start_time
+    print('inference time cost: {}'.format(elapsed_time))
+    #print(boxes.shape, boxes)
+    # print(scores.shape,scores)
+    # print(classes.shape,classes)
+    # print(num_detections)
+    # Visualization of the results of a detection.
+    vis_util.visualize_boxes_and_labels_on_image_array(
+        #          image_np,
+        image,
+        np.squeeze(boxes),
+        np.squeeze(classes).astype(np.int32),
+        np.squeeze(scores),
+        category_index,
+        use_normalized_coordinates=True,
+        line_thickness=4)
+    out.write(image)
 
-        cap.release()
-        out.release()
+cap.release()
+out.release()
